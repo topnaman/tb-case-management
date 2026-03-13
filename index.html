@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TB Case Management Staffing Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #161b27;
+      --surface2: #1e2535;
+      --border: #2a3347;
+      --accent: #3b82f6;
+      --accent2: #06b6d4;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --success: #10b981;
+      --text: #e2e8f0;
+      --text2: #94a3b8;
+      --text3: #64748b;
+      --mono: 'IBM Plex Mono', monospace;
+      --sans: 'IBM Plex Sans', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    /* Header */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .header-badge {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: var(--accent2);
+      background: rgba(6,182,212,0.1);
+      border: 1px solid rgba(6,182,212,0.25);
+      padding: 4px 10px;
+      border-radius: 3px;
+      text-transform: uppercase;
+    }
+    .header-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text2);
+    }
+    .header-title strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* Layout */
+    .layout {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 0;
+      min-height: calc(100vh - 57px);
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    /* Main content */
+    .main {
+      padding: 24px;
+      overflow-y: auto;
+    }
+
+    /* Section headers */
+    .section-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-group {
+      margin-bottom: 28px;
+    }
+
+    /* Input fields */
+    .field {
+      margin-bottom: 14px;
+    }
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text2);
+      margin-bottom: 5px;
+    }
+    .field .hint {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 3px;
+      line-height: 1.4;
+    }
+    .field input[type="number"] {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 8px 10px;
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+      -moz-appearance: textfield;
+    }
+    .field input[type="number"]::-webkit-inner-spin-button,
+    .field input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    .field input[type="number"]:focus {
+      border-color: var(--accent);
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    /* Weight card */
+    .weight-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+    }
+    .weight-card-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent2);
+      margin-bottom: 10px;
+      letter-spacing: 0.04em;
+    }
+    .weight-result {
+      background: rgba(59,130,246,0.1);
+      border: 1px solid rgba(59,130,246,0.2);
+      border-radius: 4px;
+      padding: 6px 10px;
+      margin-top: 8px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--accent);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .weight-result span:last-child {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    /* Results area */
+    .results-header {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .results-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .results-subtitle {
+      font-size: 13px;
+      color: var(--text3);
+    }
+
+    /* KPI grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .kpi {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 18px;
+    }
+    .kpi.primary {
+      background: rgba(59,130,246,0.08);
+      border-color: rgba(59,130,246,0.3);
+    }
+    .kpi-label {
+      font-size: 11px;
+      color: var(--text3);
+      margin-bottom: 6px;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+    }
+    .kpi-value {
+      font-family: var(--mono);
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1;
+    }
+    .kpi.primary .kpi-value { color: var(--accent); }
+    .kpi-note {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 4px;
+    }
+
+    /* Status banner */
+    .status {
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 20px;
+      display: none;
+      align-items: center;
+      gap: 10px;
+    }
+    .status.show { display: flex; }
+    .status.ok { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.25); color: #34d399; }
+    .status.warn { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); color: #fbbf24; }
+    .status.danger { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); color: #f87171; }
+    .status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .status.ok .status-dot { background: #10b981; }
+    .status.warn .status-dot { background: #f59e0b; }
+    .status.danger .status-dot { background: #ef4444; }
+
+    /* Detail table */
+    .detail-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .detail-card-header {
+      padding: 12px 16px;
+      background: var(--surface2);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text3);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    table.detail {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    table.detail td {
+      padding: 9px 16px;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border);
+    }
+    table.detail tr:last-child td { border-bottom: none; }
+    table.detail td:first-child { color: var(--text2); }
+    table.detail td:last-child {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--text);
+      font-weight: 500;
+      text-align: right;
+    }
+    table.detail tr.highlight td { background: rgba(59,130,246,0.05); }
+
+    /* Utilization bar */
+    .util-bar-wrap {
+      margin-top: 8px;
+    }
+    .util-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text3);
+      margin-bottom: 5px;
+    }
+    .util-bar-track {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .util-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.4s ease, background 0.3s;
+    }
+
+    /* Footer */
+    .footer {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text3);
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      margin-top: 8px;
+    }
+
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 20px 0;
+    }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+      .kpi-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <span class="header-badge">LA County DPH · TB Control</span>
+  <span class="header-title"><strong>TB Case Management Staffing Calculator</strong> — DPHN Workforce Planning</span>
+</header>
+
+<div class="layout">
+
+  <!-- ═══ SIDEBAR: Inputs ═══ -->
+  <aside class="sidebar">
+
+    <div class="section-group">
+      <div class="section-label">Annual Case Load</div>
+
+      <div class="field">
+        <label>TB3 Complex Cases</label>
+        <input type="number" id="tb3Complex" value="188" min="0" oninput="calc()">
+        <div class="hint">High comorbidity, PEH, or non-adherent</div>
+      </div>
+      <div class="field">
+        <label>TB3 Routine Cases</label>
+        <input type="number" id="tb3Routine" value="188" min="0" oninput="calc()">
+        <div class="hint">Standard active TB cases</div>
+      </div>
+      <div class="field">
+        <label>TB5 Cases with Meds</label>
+        <input type="number" id="tb5Cases" value="300" min="0" oninput="calc()">
+        <div class="hint">High-risk suspects on empiric treatment</div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>% CIs by DPHNs</label>
+          <input type="number" id="ciNursePercent" value="80" min="0" max="100" oninput="calc()">
+        </div>
+        <div class="field">
+          <label>Contacts per CI</label>
+          <input type="number" id="contactsPerCI" value="5" min="1" max="20" oninput="calc()">
+        </div>
+      </div>
+    </div>
+
+    <div class="section-group">
+      <div class="section-label">Staffing Model</div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Total DPHNs</label>
+          <input type="number" id="totalNurses" value="155" min="1" oninput="calc()">
+        </div>
+        <div class="field">
+          <label>Dedicated TB Nurses</label>
+          <input type="number" id="dedicatedTBNurses" value="40" min="0" oninput="calc()">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>TB Clinics</label>
+          <input type="number" id="numberOfClinics" value="5" min="1" oninput="calc()">
+        </div>
+        <div class="field">
+          <label>Cross-Coverage Buffer %</label>
+          <input type="number" id="crossCoveragePercent" value="25" min="0" max="50" oninput="calc()">
+        </div>
+      </div>
+    </div>
+
+    <div class="section-group">
+      <div class="section-label">Duration-Adjusted Weightings</div>
+      <p style="font-size:11px;color:var(--text3);margin-bottom:14px;line-height:1.5;">Weights = duration (months) × care intensity. This converts raw case counts into comparable case-months of workload.</p>
+
+      <div class="weight-card">
+        <div class="weight-card-title">TB3 Complex</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Duration (mo)</label>
+            <input type="number" id="tb3ComplexDuration" value="8" min="1" max="24" step="0.5" oninput="calc()">
+          </div>
+          <div class="field">
+            <label>Intensity</label>
+            <input type="number" id="tb3ComplexIntensity" value="3.0" min="0" max="10" step="0.1" oninput="calc()">
+          </div>
+        </div>
+        <div class="weight-result">
+          <span>Case-month weight</span>
+          <span id="tb3ComplexTotal">24.0</span>
+        </div>
+      </div>
+
+      <div class="weight-card">
+        <div class="weight-card-title">TB3 Routine</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Duration (mo)</label>
+            <input type="number" id="tb3RoutineDuration" value="6" min="1" max="24" step="0.5" oninput="calc()">
+          </div>
+          <div class="field">
+            <label>Intensity</label>
+            <input type="number" id="tb3RoutineIntensity" value="1.5" min="0" max="10" step="0.1" oninput="calc()">
+          </div>
+        </div>
+        <div class="weight-result">
+          <span>Case-month weight</span>
+          <span id="tb3RoutineTotal">9.0</span>
+        </div>
+      </div>
+
+      <div class="weight-card">
+        <div class="weight-card-title">TB5 with Meds</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Duration (mo)</label>
+            <input type="number" id="tb5Duration" value="3" min="1" max="24" step="0.5" oninput="calc()">
+          </div>
+          <div class="field">
+            <label>Intensity</label>
+            <input type="number" id="tb5Intensity" value="1.0" min="0" max="10" step="0.1" oninput="calc()">
+          </div>
+        </div>
+        <div class="weight-result">
+          <span>Case-month weight</span>
+          <span id="tb5Total">3.0</span>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>CI admin weight</label>
+          <input type="number" id="ciWeight" value="1" min="0" max="10" step="0.5" oninput="calc()">
+          <div class="hint">Per investigation</div>
+        </div>
+        <div class="field">
+          <label>Contact weight</label>
+          <input type="number" id="contactWeight" value="0.2" min="0" max="5" step="0.1" oninput="calc()">
+          <div class="hint">Per contact person</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Target case-months per nurse / year</label>
+        <input type="number" id="targetWorkloadPerNurse" value="70" min="10" max="200" step="5" oninput="calc()">
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ═══ MAIN: Results ═══ -->
+  <main class="main">
+
+    <div class="results-header">
+      <div class="results-title">Staffing Analysis</div>
+      <div class="results-subtitle">Recalculates in real time</div>
+    </div>
+
+    <!-- Status banner -->
+    <div class="status" id="statusBanner">
+      <div class="status-dot"></div>
+      <span id="statusText"></span>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi primary">
+        <div class="kpi-label">DPHNs Needed</div>
+        <div class="kpi-value" id="recommendedNurses">--</div>
+        <div class="kpi-note">with cross-coverage buffer</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Capacity Utilization</div>
+        <div class="kpi-value" id="capacityUtilization">--%</div>
+        <div class="kpi-note">of dedicated TB nurses</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Case-Months / Nurse</div>
+        <div class="kpi-value" id="caseMonthsPerNurse">--</div>
+        <div class="kpi-note">weighted annual workload</div>
+      </div>
+    </div>
+
+    <!-- Utilization bar -->
+    <div class="detail-card" style="padding:16px 18px;margin-bottom:16px;">
+      <div class="util-bar-wrap">
+        <div class="util-bar-label">
+          <span>Capacity utilization</span>
+          <span id="utilPct2">--%</span>
+        </div>
+        <div class="util-bar-track">
+          <div class="util-bar-fill" id="utilBar" style="width:0%;background:var(--accent)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Workload breakdown -->
+    <div class="detail-card">
+      <div class="detail-card-header">Workload Breakdown</div>
+      <table class="detail">
+        <tr><td>TB3 Complex — total case-months</td><td id="wl_tb3complex">--</td></tr>
+        <tr><td>TB3 Routine — total case-months</td><td id="wl_tb3routine">--</td></tr>
+        <tr><td>TB5 with Meds — total case-months</td><td id="wl_tb5">--</td></tr>
+        <tr><td>CI administrative workload (case-months)</td><td id="wl_ciadmin">--</td></tr>
+        <tr><td>Contact direct workload (case-months)</td><td id="wl_contact">--</td></tr>
+        <tr class="highlight"><td>Total weighted workload</td><td id="wl_total">--</td></tr>
+      </table>
+    </div>
+
+    <!-- Per-nurse metrics -->
+    <div class="detail-card">
+      <div class="detail-card-header">Per-Nurse Metrics (current staff)</div>
+      <table class="detail">
+        <tr><td>Active TB cases per nurse (unweighted)</td><td id="activeTBPerNurse">--</td></tr>
+        <tr><td>All cases per nurse (unweighted)</td><td id="avgCasesPerNurse">--</td></tr>
+        <tr><td>CIs per nurse annually</td><td id="ciPerNurse">--</td></tr>
+        <tr><td>Nurses per TB clinic</td><td id="nursesPerClinic">--</td></tr>
+      </table>
+    </div>
+
+    <!-- CI summary -->
+    <div class="detail-card">
+      <div class="detail-card-header">Contact Investigation Summary</div>
+      <table class="detail">
+        <tr><td>Total CIs (all cases)</td><td id="totalCIs">--</td></tr>
+        <tr><td>CIs handled by DPHNs</td><td id="ciHandledByNurses">--</td></tr>
+        <tr><td>Total contacts managed by DPHNs</td><td id="totalContacts">--</td></tr>
+        <tr class="highlight"><td>Total CI workload (case-months)</td><td id="ciWorkloadBreakdown">--</td></tr>
+      </table>
+    </div>
+
+    <div class="footer">LA County Department of Public Health · Medical and Dental Affairs · TB Case Management Staffing Calculator</div>
+  </main>
+</div>
+
+<script>
+function v(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+function calc() {
+  const tb3Complex   = v('tb3Complex');
+  const tb3Routine   = v('tb3Routine');
+  const tb5Cases     = v('tb5Cases');
+  const ciPct        = v('ciNursePercent');
+  const contactsPCI  = v('contactsPerCI') || 1;
+
+  const totalNurses    = v('totalNurses')    || 1;
+  const dedicatedTB    = v('dedicatedTBNurses');
+  const nClinics       = v('numberOfClinics') || 1;
+  const bufferPct      = v('crossCoveragePercent');
+
+  const c1dur = v('tb3ComplexDuration');  const c1int = v('tb3ComplexIntensity');
+  const r1dur = v('tb3RoutineDuration');  const r1int = v('tb3RoutineIntensity');
+  const t5dur = v('tb5Duration');         const t5int = v('tb5Intensity');
+
+  const wTB3C = c1dur * c1int;
+  const wTB3R = r1dur * r1int;
+  const wTB5  = t5dur * t5int;
+
+  set('tb3ComplexTotal', wTB3C.toFixed(1));
+  set('tb3RoutineTotal', wTB3R.toFixed(1));
+  set('tb5Total',        wTB5.toFixed(1));
+
+  const ciW   = v('ciWeight');
+  const conW  = v('contactWeight');
+  const target = v('targetWorkloadPerNurse') || 1;
+
+  const totalCIs   = tb3Complex + tb3Routine + tb5Cases;
+  const ciByNurses = Math.round(totalCIs * (ciPct / 100));
+  const totalConts = ciByNurses * contactsPCI;
+
+  const wl_c = tb3Complex  * wTB3C;
+  const wl_r = tb3Routine  * wTB3R;
+  const wl_t = tb5Cases    * wTB5;
+  const wl_a = ciByNurses  * ciW;
+  const wl_k = totalConts  * conW;
+  const totalWL = wl_c + wl_r + wl_t + wl_a + wl_k;
+
+  const rawNeeded  = totalWL / target;
+  const withBuffer = rawNeeded * (1 + bufferPct / 100);
+  const needed     = Math.ceil(withBuffer);
+
+  const avail = dedicatedTB > 0 ? dedicatedTB : totalNurses;
+
+  const utilPct    = (needed / avail * 100);
+  const utilStr    = utilPct.toFixed(1) + '%';
+
+  // KPIs
+  set('recommendedNurses',  needed);
+  set('capacityUtilization', utilStr);
+  set('caseMonthsPerNurse',  (totalWL / avail).toFixed(1));
+  set('utilPct2', utilStr);
+
+  // Bar
+  const bar = document.getElementById('utilBar');
+  const pct = Math.min(utilPct, 100);
+  bar.style.width = pct + '%';
+  bar.style.background = utilPct > 100 ? 'var(--danger)' : utilPct > 85 ? 'var(--warn)' : 'var(--success)';
+
+  // Workload breakdown
+  set('wl_tb3complex', wl_c.toFixed(0));
+  set('wl_tb3routine', wl_r.toFixed(0));
+  set('wl_tb5',        wl_t.toFixed(0));
+  set('wl_ciadmin',    wl_a.toFixed(0));
+  set('wl_contact',    wl_k.toFixed(0));
+  set('wl_total',      totalWL.toFixed(0));
+
+  // Per-nurse
+  set('activeTBPerNurse',  ((tb3Complex + tb3Routine) / avail).toFixed(1));
+  set('avgCasesPerNurse',  ((tb3Complex + tb3Routine + tb5Cases) / avail).toFixed(1));
+  set('ciPerNurse',        (ciByNurses / avail).toFixed(1));
+  set('nursesPerClinic',   (avail / nClinics).toFixed(1));
+
+  // CI
+  set('totalCIs',          totalCIs);
+  set('ciHandledByNurses', ciByNurses + ' (' + ciPct + '% of ' + totalCIs + ')');
+  set('totalContacts',     totalConts.toLocaleString());
+  set('ciWorkloadBreakdown', (wl_a + wl_k).toFixed(1));
+
+  // Status
+  const banner = document.getElementById('statusBanner');
+  const text   = document.getElementById('statusText');
+  banner.className = 'status show';
+  if (utilPct > 100) {
+    banner.classList.add('danger');
+    text.textContent = `Understaffed — ${needed - avail} additional nurses needed for safe coverage.`;
+  } else if (utilPct > 85) {
+    banner.classList.add('warn');
+    text.textContent = 'Near capacity — limited buffer for surges or unexpected vacancies.';
+  } else {
+    banner.classList.add('ok');
+    text.textContent = 'Staffing adequate — capacity available for growth and cross-coverage.';
+  }
+}
+
+function set(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+calc();
+</script>
+</body>
+</html>
